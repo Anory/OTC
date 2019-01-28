@@ -6,6 +6,7 @@ import threading
 from otc import add_data
 from otc import url
 import time
+from send import send_mailpy3
 
 # 数据列表
 time_lists = []
@@ -14,13 +15,12 @@ token_lists = []
 
 # 创建线程类
 class ThreadTest(threading.Thread):
-    def __init__(self, name_id, name_headers, name_sql):
+    def __init__(self, name_headers, name_sql):
         threading.Thread.__init__(self)
         self.n_list = add_data.get_name_list(name_sql)
-        self.user_id = name_id
         self.headers = name_headers
 
-    # 获取用户token和id
+    # 获取用户token
     def get_token(self):
         count = 1
         for username in self.n_list:
@@ -33,7 +33,7 @@ class ThreadTest(threading.Thread):
                 "Content-Type": "application/json",
                 "keyId": "5d12c14d64da4904931f751cd7504fe4"
             }
-            res = requests.post(url="http://172.16.2.22:16010/api/user/front/userSign/doSignIn", data=json.dumps(data),
+            res = requests.post(url=url.user_login, data=json.dumps(data),
                                 headers=header).json()
             name_token = res["data"]["loginSuccessModel"]["rememberPasswordToken"]
             token_lists.append(name_token)
@@ -41,7 +41,7 @@ class ThreadTest(threading.Thread):
 
     # 多用户交易
     def trade(self):
-        count = 1
+        count = 0
         for token in token_lists:
             count += 1
             header = {
@@ -49,12 +49,13 @@ class ThreadTest(threading.Thread):
                 "Access-Token": token,
                 "keyId": "5d12c14d64da4904931f751cd7504fe4"
             }
-            price = random.randint(1, 30)
-            amount = random.randint(1, 50)
+            # price = random.randint(6, 10)
+            amount = random.randint(1, 10)
+            price = round(random.uniform(0.1, 1), 2)
             data = {
-                "counterId": "528568795921543168",
-                "entrustPrice": price,
-                "entrustTotalAmount": amount,
+                "counterId": "520259173401755648",   # 开发环境用 512948910692499456   性能测试用 520259173401755648
+                "entrustPrice": 1,
+                "entrustTotalAmount": 1,
                 "entrustType": 1,
                 "tradePwd": "Y123456"
             }
@@ -62,37 +63,39 @@ class ThreadTest(threading.Thread):
             price_deal_buy = requests.post(url=url.buy, data=json.dumps(data), headers=header).json()
             print("限价交易（买）：", price_deal_buy)
             # 限价交易卖
-            # price_deal_sell = requests.post(url=url.sell, data=json.dumps(data), headers=headers).json()
-            # print("限价交易===（卖）：", price_deal_sell)
+            price_deal_sell = requests.post(url=url.sell, data=json.dumps(data), headers=header).json()
+            print("限价交易===（卖）：", price_deal_sell)
+            # print("++++++++++++++++++++++++++++++++++++++", count)
+
+        print("次数：", count)
         return count
 
     # 单用户买卖
     def buy_or_sell(self):
         data = {
-            "counterId": "528568795921543168",
-            "entrustPrice": "1",
-            "entrustTotalAmount": "1",
+            "counterId": "520259173401755648",
+            "entrustPrice": 1,
+            "entrustTotalAmount": 1,
             "entrustType": 1,
             "tradePwd": "Y123456",
-            "userId": self.user_id
+            "userId": 530335383058264064
         }
         # 限价交易买
-        # price_deal_buy = requests.post(url=url.buy, data=json.dumps(data), headers=headers).json()
-        # code = price_deal_buy["code"]
-        # if code != 200:
-        #     print("错误！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！")
-        # print("限价交易（买）：", price_deal_buy)
-        # 限价交易卖
-        price_deal_sell = requests.post(url=url.sell, data=json.dumps(data), headers=self.headers).json()
-        print("限价交易===（卖）：", price_deal_sell)
-        return price_deal_sell
+        for i in range(0, 10):
+            price_deal_buy = requests.post(url=url.buy, data=json.dumps(data), headers=self.headers).json()
+            print("限价交易（买）：", price_deal_buy)
+            code = str(price_deal_buy["code"])
+            # 限价交易卖
+            price_deal_sell = requests.post(url=url.sell, data=json.dumps(data), headers=self.headers).json()
+            print("限价交易===（卖）：", price_deal_sell)
+            return code
 
     # 法币提取/充值
     def usd_extract(self):
         data = {
             "assetUserBankId": "527090031777693697",
             "tradePwd": "Y123456",
-            "usdAmount": 10
+            "usdAmount": 100
         }
         start_time = time.time()
         extract = requests.post(url=url.usd_extract, data=json.dumps(data), headers=self.headers).json()
@@ -107,38 +110,76 @@ class ThreadTest(threading.Thread):
         data = {
           "amount": 10,
           "coinAddressId": 526068429162168328,
-          "coinCode": "BTC",
+          "coinCode": "AIC",
           "tradePwd": "Y123456"
         }
         extract = requests.post(url=url.coin_extract, data=json.dumps(data), headers=self.headers).json()
         print("用户虚拟币提取：", extract)
         return extract
 
+    # 登录AIC钱包，获取用户token
+    def aic_login(self):
+        data = {
+            "email": "694298407@qq.com",
+            "password": "ygb123456"
+        }
+        header = {
+            "Content-Type": "application/json",
+            "keyId": "5d12c14d64da4904931f751cd7504fe4"
+        }
+        login = requests.post(url=url.login, data=json.dumps(data), headers=header).json()
+        login_token = login["data"]["token"]
+        return login_token
+
+    # AIC钱包发送墨晶
+    def aic_send(self):
+        data = {
+            "coinId": 1,
+            "coinName": "AIC",
+            "toLabel": "测试并发",
+            "toAddress": "BDFfB9R7pWCARtjzcfhEf6ikeA34GmFZLK",
+            "amount": 0.001
+        }
+        header = {
+            "Content-Type": "application/json",
+            "keyId": "5d12c14d64da4904931f751cd7504fe4",
+            "Access-Token": self.aic_login()
+        }
+        send = requests.post(url=url.aic_send, data=json.dumps(data), headers=header).json()
+        print(send)
+
 
 if __name__ == '__main__':
-    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyQWNjb3VudCI6IjM0Njk4OTYxNjEzQHFxLmNvbSIsInR5cGUiOjEsIm" \
-            "V4cCI6MTU0NjQyMDgyMCwidXNlcklkIjo1Mjg1MjUzNzYxNTkzNjMwNzJ9.88T9dMQgvDtYlaN5Okmwv4Nu8DDE70hBXvXJqLr9XbE"
-    user_id = "528525376159363072"
-    headers = {
+    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyQWNjb3VudCI6IjE4OTgxMjIxMDM3QHFxLmNvbSIsInR5cGUiOjEsImV4cCI6MTU0ODY0NDc2OCwidXNlcklkIjo1MzYyMzAwOTMyMjAwOTgwNDh9.o7Swu3hcVe9fmmuZH1tZNTYZzzWtvpV2pWffqGLm-ck"
+    topex_headers = {
         "Content-Type": "application/json",
-        "userAccount": "34698961613@qq.com",
-        "userId": "528525376159363072",
+        "userAccount": "18981221037@qq.com",  # 性能测试 68068214905@qq.com  开发环境  28436519733@qq.com
+        "userId": "536230093220098048",
         "Access-Token": token,
         "keyId": "5d12c14d64da4904931f751cd7504fe4"
     }
+
     # 获取用户名
-    sql = "SELECT useraccount FROM user_info WHERE id LIKE '528%' LIMIT 100;"
-    run = ThreadTest(user_id, headers, sql)
+    # sql = "SELECT useraccount FROM user_info WHERE id LIKE '536%' LIMIT 1;"
+    sql = "SELECT useraccount FROM user_info WHERE id = 530335383058264064;"
+    run = ThreadTest(topex_headers, sql)
+    sendmail = send_mailpy3.SendMail()
+    # run.aic_send()  # 运行AIC钱包转账
     # get_token = run.get_token()
-    # run_trade = run.trade()
-    t_list = []
-    for i in range(0, 150):
-        t1 = threading.Thread(target=run.usd_extract)
-        t_list.append(t1)
-    for t in t_list:
-        t.start()
-    for t in t_list:
-        t.join()
+    for i in range(0, 1):
+        run_trade = run.buy_or_sell()
+        if run_trade != "200":
+            result = "测试异常"
+            sendmail.sendMessage(run_trade, result)
+            break
+    # t_list = []
+    # for i in range(0, 9):
+    #     t1 = threading.Thread(target=run.aic_send)
+    #     t_list.append(t1)
+    # for t in t_list:
+    #     t.start()
+    # for t in t_list:
+    #     t.join()
 
     # sum_time = sum(time_lists)/len(time_lists)
     # print(sum_time)

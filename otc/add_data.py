@@ -5,7 +5,17 @@ import random
 import threading
 
 
-# 链接otc测试数据库
+# 链接性能测试数据库
+# otc_connect = pymysql.Connect(
+#     host='172.16.3.103',
+#     port=3306,
+#     user='topex',
+#     passwd='topex123456',
+#     db='topex',
+#     charset='utf8'
+# )
+
+# 链接开发环境数据库
 otc_connect = pymysql.Connect(
     host='172.16.2.23',
     port=3306,
@@ -39,7 +49,7 @@ def register(headers):
         "userName": email,
         "verificationCode": "123456"
     }
-    res = requests.post(url="http://172.16.2.22:16010/api/user/front/userRegister/register", data=json.dumps(data), headers=headers).json()
+    res = requests.post(url="http://www.topex.test/api/user/front/userRegister/register", data=json.dumps(data), headers=headers).json()
     print(res)
     return res
 
@@ -144,14 +154,17 @@ if __name__ == '__main__':
     # print(name_list)
     # run_login = get_token(name_list, header)
     # run_trade = trader(name_list)
-    t_list = []
-    for i in range(200):
-        t1 = threading.Thread(target=buy_or_sell, args=(user_id, token))
-        t_list.append(t1)
-    for t in t_list:
-        t.start()
-    for t in t_list:
-        t.join()
+    # t_list = []
+    # for i in range(0, 200):
+    #     t1 = threading.Thread(target=register, args=(header, ))
+    #     t_list.append(t1)
+    # for t in t_list:
+    #     t.start()
+    # for t in t_list:
+    #     t.join()
+
+    for i in range(0, 3000):
+        run = register(header)
 
 
 
