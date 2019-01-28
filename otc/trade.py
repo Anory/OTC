@@ -73,7 +73,7 @@ class ThreadTest(threading.Thread):
     # 单用户买卖
     def buy_or_sell(self):
         data = {
-            "counterId": "520259173401755648",
+            "counterId": "512948910692499456",
             "entrustPrice": 1,
             "entrustTotalAmount": 1,
             "entrustType": 1,
@@ -81,14 +81,13 @@ class ThreadTest(threading.Thread):
             "userId": 530335383058264064
         }
         # 限价交易买
-        for i in range(0, 10):
-            price_deal_buy = requests.post(url=url.buy, data=json.dumps(data), headers=self.headers).json()
-            print("限价交易（买）：", price_deal_buy)
-            code = str(price_deal_buy["code"])
-            # 限价交易卖
-            price_deal_sell = requests.post(url=url.sell, data=json.dumps(data), headers=self.headers).json()
-            print("限价交易===（卖）：", price_deal_sell)
-            return code
+        price_deal_buy = requests.post(url=url.buy, data=json.dumps(data), headers=self.headers).json()
+        print("限价交易（买）：", price_deal_buy)
+        code = str(price_deal_buy["code"])
+        # 限价交易卖
+        price_deal_sell = requests.post(url=url.sell, data=json.dumps(data), headers=self.headers).json()
+        print("限价交易===（卖）：", price_deal_sell)
+        return code
 
     # 法币提取/充值
     def usd_extract(self):
@@ -150,11 +149,12 @@ class ThreadTest(threading.Thread):
 
 
 if __name__ == '__main__':
-    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyQWNjb3VudCI6IjE4OTgxMjIxMDM3QHFxLmNvbSIsInR5cGUiOjEsImV4cCI6MTU0ODY0NDc2OCwidXNlcklkIjo1MzYyMzAwOTMyMjAwOTgwNDh9.o7Swu3hcVe9fmmuZH1tZNTYZzzWtvpV2pWffqGLm-ck"
+    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyQWNjb3VudCI6IjI4NDM2NTE5NzMzQHFxLmNvbSIsInR5cGUiOjEsImV4cC" \
+            "I6MTU0ODY2ODcyNCwidXNlcklkIjo1MzAzMzUzODMwNTgyNjQwNjR9.vWpvLFaweTF-m4IeWHMQCcqjorzlGVFXzIwCkYY7mIE"
     topex_headers = {
         "Content-Type": "application/json",
-        "userAccount": "18981221037@qq.com",  # 性能测试 68068214905@qq.com  开发环境  28436519733@qq.com
-        "userId": "536230093220098048",
+        "userAccount": "28436519733@qq.com",  # 性能测试 68068214905@qq.com  开发环境  28436519733@qq.com
+        "userId": "530335383058264064",
         "Access-Token": token,
         "keyId": "5d12c14d64da4904931f751cd7504fe4"
     }
@@ -166,20 +166,27 @@ if __name__ == '__main__':
     sendmail = send_mailpy3.SendMail()
     # run.aic_send()  # 运行AIC钱包转账
     # get_token = run.get_token()
-    for i in range(0, 1):
+    for i in range(0, 5000000):
         run_trade = run.buy_or_sell()
         if run_trade != "200":
             result = "测试异常"
             sendmail.sendMessage(run_trade, result)
             break
-    # t_list = []
-    # for i in range(0, 9):
-    #     t1 = threading.Thread(target=run.aic_send)
-    #     t_list.append(t1)
-    # for t in t_list:
-    #     t.start()
-    # for t in t_list:
-    #     t.join()
+
+    # 写一个循环运行指定方法，再添加多线程运行该方法，程序出现异常的时候跳出循环
+    # for count in range(0, 500000):
+    #     t_list = []
+    #     for i in range(0, 10):
+    #         t1 = threading.Thread(target=run.buy_or_sell)
+    #         t_list.append(t1)
+    #     for t in t_list:
+    #         t.start()
+    #     for t in t_list:
+    #         t.join()
+    #     if run.buy_or_sell() != "200":
+    #         result = "测试异常"
+    #         sendmail.sendMessage(run.buy_or_sell(), result)
+    #         break
 
     # sum_time = sum(time_lists)/len(time_lists)
     # print(sum_time)
