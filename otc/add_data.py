@@ -2,28 +2,29 @@ import pymysql
 import requests
 import json
 import random
+from otc import url
 import threading
 
 
 # 链接性能测试数据库
-# otc_connect = pymysql.Connect(
-#     host='172.16.3.103',
-#     port=3306,
-#     user='topex',
-#     passwd='topex123456',
-#     db='topex',
-#     charset='utf8'
-# )
-
-# 链接开发环境数据库
 otc_connect = pymysql.Connect(
-    host='172.16.2.23',
+    host='172.16.3.103',
     port=3306,
-    user='rddb',
-    passwd='mozi123456',
+    user='topex',
+    passwd='topex123456',
     db='topex',
     charset='utf8'
 )
+
+# 链接开发环境数据库
+# otc_connect = pymysql.Connect(
+#     host='172.16.2.23',
+#     port=3306,
+#     user='rddb',
+#     passwd='mozi123456',
+#     db='topex',
+#     charset='utf8'
+# )
 
 
 # 获取用户账号列表
@@ -39,7 +40,7 @@ def get_name_list(sql):
 
 # 用户注册
 def register(headers):
-    email = random.randint(100000, 99999999999)
+    email = random.randint(9999999, 100000000)
     data = {
         "confirmPassword": "154988818ww",
         "countryCode": "zh",
@@ -49,7 +50,7 @@ def register(headers):
         "userName": email,
         "verificationCode": "123456"
     }
-    res = requests.post(url="http://www.topex.test/api/user/front/userRegister/register", data=json.dumps(data), headers=headers).json()
+    res = requests.post(url="http://172.16.3.102:16010/api/user/front/userRegister/register", data=json.dumps(data), headers=headers).json()
     print(res)
     return res
 
@@ -61,84 +62,12 @@ def get_token(username_list, headers):
             "password": "YGB423542",
             "userAccount": username
         }
-        res = requests.post(url="http://172.16.2.22:16010/api/user/front/userSign/doSignIn", data=json.dumps(data), headers=headers).json()
+        res = requests.post(url=url.user_login, data=json.dumps(data), headers=headers).json()
         token = res["data"]["loginSuccessModel"]["rememberPasswordToken"]
         print("用户登录token：", token)
         # print(json.loads(res))
         print("用户登录返回：", res)
         return res
-
-
-# 用户交易
-def trade(username_list):
-    count = 0
-    for username in username_list:
-        data = {
-            "password": "YGB423542",
-            "userAccount": username
-        }
-        header = {
-            "Content-Type": "application/json",
-            "keyId": "5d12c14d64da4904931f751cd7504fe4"
-        }
-        res = requests.post(url="http://172.16.2.22:16010/api/user/front/userSign/doSignIn", data=json.dumps(data), headers=header).json()
-        token = res["data"]["loginSuccessModel"]["rememberPasswordToken"]
-        user_id = res["data"]["userBasic"]["id"]
-        print("用户ID:", user_id)
-        headers = {
-            "Content-Type": "application/json",
-            "Access-Token": token,
-            "keyId": "5d12c14d64da4904931f751cd7504fe4"
-        }
-        price = random.randint(1, 30)
-        amount = random.randint(10000, 50)
-        data = {
-            "counterId": "528568795921543168",
-            "entrustPrice": price,
-            "entrustTotalAmount": amount,
-            "entrustType": 1,
-            "tradePwd": "Y123456",
-            "userId": user_id
-        }
-        # 限价交易买
-        price_deal_buy = requests.post(url="http://172.16.2.22:16010/api/trade/tradeEntrust/buyEntrust",
-                                       data=json.dumps(data), headers=headers).json()
-        print("限价交易（买）：", price_deal_buy)
-        # 限价交易卖
-        # price_deal_sell = requests.post(url="http://172.16.2.22:16010/api/trade/tradeEntrust/sellEntrust",
-        # data=json.dumps(data), headers=headers).json()
-        # print("限价交易===（卖）：", price_deal_sell)
-    return count
-
-
-# 单个用户买卖
-def buy_or_sell(user_id, token):
-    headers = {
-        "Content-Type": "application/json",
-        "Access-Token": token,
-        "keyId": "5d12c14d64da4904931f751cd7504fe4"
-    }
-    price = 1
-    amount = 1
-    data = {
-        "counterId": "528568795921543168",
-        "entrustPrice": price,
-        "entrustTotalAmount": amount,
-        "entrustType": 1,
-        "tradePwd": "Y123456",
-        "userId": user_id
-    }
-    # 限价交易买
-    # price_deal_buy = requests.post(url="http://172.16.2.22:16010/api/trade/tradeEntrust/buyEntrust",
-    #                                data=json.dumps(data), headers=headers).json()
-    # code = price_deal_buy["code"]
-    # if code != 200:
-    #     print("错误！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！")
-    # print("限价交易（买）：", price_deal_buy)
-    # 限价交易卖
-    price_deal_sell = requests.post(url="http://172.16.2.22:16010/api/trade/tradeEntrust/sellEntrust",
-                                    data=json.dumps(data), headers=headers).json()
-    print("限价交易===（卖）：", price_deal_sell)
 
 
 if __name__ == '__main__':
@@ -151,19 +80,7 @@ if __name__ == '__main__':
     }
     sql = "SELECT useraccount FROM user_info WHERE id LIKE '528%' LIMIT 100;"
     name_list = get_name_list(sql)
-    # print(name_list)
-    # run_login = get_token(name_list, header)
-    # run_trade = trader(name_list)
-    # t_list = []
-    # for i in range(0, 200):
-    #     t1 = threading.Thread(target=register, args=(header, ))
-    #     t_list.append(t1)
-    # for t in t_list:
-    #     t.start()
-    # for t in t_list:
-    #     t.join()
-
-    for i in range(0, 3000):
+    for i in range(0, 5):
         run = register(header)
 
 

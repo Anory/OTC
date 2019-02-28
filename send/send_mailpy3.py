@@ -12,9 +12,9 @@ class SendMail(object):
     def __init__(self):
         # 第三方 SMTP 服务
         self.mail_host = "smtp.exmail.qq.com"      # SMTP服务器
-        self.mail_user = 'janmmeyzhu@mozi.top'     # 用户名
-        self.mail_pass = 'System_32'               # 登录密码
-        self.sender = 'janmmeyzhu@mozi.top'    # 发件人邮箱(最好写全, 不然会失败)
+        self.mail_user = 'ArnoYang@mozi.top'     # 用户名
+        self.mail_pass = 'YGBkai423542'               # 登录密码
+        self.sender = 'ArnoYang@mozi.top'    # 发件人邮箱(最好写全, 不然会失败)
         self.receivers = ['876522068@qq.com']  # 接收邮件，可设置为你的QQ邮箱或者其他邮箱
 
     def sendMessage(self, content, title):
@@ -35,5 +35,5 @@ if __name__ == '__main__':
     init_env = SendMail()
     content = '发送测试邮件'
     title = 'Send Mail By Python'  # 邮件主题
-    init_env.sendMessage(content,title)
+    init_env.sendMessage(content, title)
 
