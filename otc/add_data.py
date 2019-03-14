@@ -38,8 +38,8 @@ def get_name_list(sql):
     return lists
 
 
-# 用户注册
-def register(headers):
+# 交易平台用户注册
+def top_register(headers):
     email = random.randint(9999999, 100000000)
     data = {
         "confirmPassword": "154988818ww",
@@ -50,24 +50,30 @@ def register(headers):
         "userName": email,
         "verificationCode": "123456"
     }
-    res = requests.post(url="http://172.16.3.102:16010/api/user/front/userRegister/register", data=json.dumps(data), headers=headers).json()
+    res = requests.post(url="http://172.16.3.102:16020/front/userRegister/register", data=json.dumps(data),
+                        headers=headers).json()
     print(res)
     return res
 
 
-# 获取用户token
-def get_token(username_list, headers):
-    for username in username_list:
-        data = {
-            "password": "YGB423542",
-            "userAccount": username
-        }
-        res = requests.post(url=url.user_login, data=json.dumps(data), headers=headers).json()
-        token = res["data"]["loginSuccessModel"]["rememberPasswordToken"]
-        print("用户登录token：", token)
-        # print(json.loads(res))
-        print("用户登录返回：", res)
-        return res
+# AIC钱包用户注册
+def aic_register():
+    email = random.randint(88888888, 999999999)
+    user_info = "{}@qq.com".format(email)
+    data = {
+      "confirmPassword": "ygb123456",
+      "email": user_info,
+      "password": "ygb123456",
+      "username": user_info,
+    }
+    header = {
+        "Content-Type": "application/json",
+        "keyId": "5d12c14d64da4904931f751cd7504fe4"
+    }
+    res = requests.post(url=url.aic_register, data=json.dumps(data),
+                        headers=header).json()
+    print(res)
+    return res
 
 
 if __name__ == '__main__':
@@ -80,8 +86,8 @@ if __name__ == '__main__':
     }
     sql = "SELECT useraccount FROM user_info WHERE id LIKE '528%' LIMIT 100;"
     name_list = get_name_list(sql)
-    for i in range(0, 5):
-        run = register(header)
+    for i in range(0, 1000):
+        run = top_register(header)
 
 
 
